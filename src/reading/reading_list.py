@@ -63,6 +63,10 @@ class ReadingListManager:
 
         return [book for book, _ in self._books.values()]
 
+    def get_entries(self) -> list[tuple[Book, str]]:
+        """Return all books together with their reading statuses."""
+        return list(self._books.values())
+
     def get_status(self, isbn: str) -> str:
         """Return the current reading status of a book."""
 

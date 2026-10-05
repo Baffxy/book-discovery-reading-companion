@@ -61,6 +61,16 @@ def test_find_book(manager, book):
     assert found is book
 
 
+def test_get_entries(manager, book):
+    manager.add_book(book, "Reading")
+
+    entries = manager.get_entries()
+
+    assert len(entries) == 1
+    assert entries[0][0] is book
+    assert entries[0][1] == "Reading"
+
+
 def test_duplicate_book(manager, book):
     manager.add_book(book)
 
