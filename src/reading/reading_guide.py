@@ -103,10 +103,10 @@ Requirements:
             cleaned_text = text.strip()
 
             # Handle responses wrapped in Markdown code fences.
-            if cleaned_text.startswith("'''"):
+            if cleaned_text.startswith("```"):
                 lines = cleaned_text.splitlines()
 
-                if lines and lines[0].strip().startswith(""):
+                if lines and lines[0].strip().startswith("```"):
                     lines = lines[1:]
 
                 if lines and lines[-1].strip() == "```":

@@ -73,6 +73,32 @@ def test_generate_reading_guide():
 
     assert len(guide["discussion_questions"]) == 5
 
+def test_markdown_code_fence_response():
+    """Test that JSON wrapped in Markdown code fences is handled."""
+
+    response = """```json
+{
+    "summary": "A fantasy adventure about Bilbo Baggins.",
+    "reading_level": "Intermediate",
+    "discussion_questions": [
+        "What motivates Bilbo to join the adventure?",
+        "How does Bilbo change throughout the story?",
+        "What challenges does Bilbo face?",
+        "How do the other characters influence Bilbo?",
+        "What are the main themes of the story?"
+    ]
+}
+```"""
+
+    generator = ReadingGuideGenerator(
+        client=FakeClient(response)
+    )
+
+    guide = generator.generate(create_book())
+
+    assert guide["summary"]
+    assert guide["reading_level"] == "Intermediate"
+    assert len(guide["discussion_questions"]) == 5
 
 def test_missing_api_client_raises_error():
     """Test that a missing Gemini client/API key raises an error."""
