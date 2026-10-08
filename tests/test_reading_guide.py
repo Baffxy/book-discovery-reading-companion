@@ -100,8 +100,15 @@ def test_markdown_code_fence_response():
     assert guide["reading_level"] == "Intermediate"
     assert len(guide["discussion_questions"]) == 5
 
-def test_missing_api_client_raises_error():
+def test_missing_api_client_raises_error(
+    monkeypatch,
+):
     """Test that a missing Gemini client/API key raises an error."""
+
+    monkeypatch.delenv(
+        "GEMINI_API_KEY",
+        raising=False,
+    )
 
     generator = ReadingGuideGenerator(
         api_key=None,
