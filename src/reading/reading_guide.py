@@ -10,6 +10,7 @@ from src.models.book import Book
 load_dotenv()
 
 
+
 class ReadingGuideError(Exception):
     """Raised when the AI reading guide cannot be generated."""
 
@@ -17,17 +18,29 @@ class ReadingGuideError(Exception):
 class ReadingGuideGenerator:
     """Generate AI-powered reading guides for books using Gemini."""
 
-    def __init__(self, api_key: str | None = None, client=None):
+    def __init__(
+        self,
+        api_key: str | None = None,
+        client=None,
+    ):
         """Initialize the reading guide generator."""
-        self.api_key = api_key or os.getenv("GEMINI_API_KEY")
 
         if client is not None:
             self.client = client
-        elif self.api_key:
-            self.client = genai.Client(api_key=self.api_key)
+            self.api_key = api_key
+            return
+
+        if api_key is not None:
+            self.api_key = api_key
+        else:
+            self.api_key = os.getenv("GEMINI_API_KEY")
+
+        if self.api_key:
+            self.client = genai.Client(
+                api_key=self.api_key
+            )
         else:
             self.client = None
-
     def _build_prompt(self, book: Book) -> str:
         """Build the prompt sent to Gemini."""
         authors = ", ".join(book.authors) if book.authors else "Unknown"
@@ -84,7 +97,7 @@ Requirements:
 
         try:
             response = self.client.models.generate_content(
-                model="gemini-2.5-flash",
+                model="gemini-3.8-flash",
                 contents=self._build_prompt(book),
             )
         except Exception as exc:
