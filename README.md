@@ -235,6 +235,18 @@ The application requires configuration for the Gemini API and PostgreSQL databas
 - Introduce individual user accounts if the project scope expands.
 - Improve recommendation quality with more advanced approaches.
 
+## 🛠️ Troubleshooting
+
+- **Dependency installation errors:** Confirm that your virtual environment is activated and install the dependencies with `pip install -r requirements.txt`.
+
+- **Missing API credentials:** Check that `GEMINI_API_KEY` and `DATABASE_URL` are configured in your local `.env` file.
+
+- **Database connection errors:** Verify that your PostgreSQL connection string is correct and that your Neon database is accessible.
+
+- **Application startup issues:** Run `streamlit run app.py` from the project root and inspect the terminal output for errors.
+
+- **Test failures:** Run `python -m pytest -q` to identify failing tests.
+
 ## 👨‍💻 Development
 
 This project originated as a collaborative project for a Python Advanced course and was subsequently extended through independent development and improvements.
