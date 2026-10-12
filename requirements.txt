@@ -3,3 +3,4 @@ requests
 python-dotenv
 google-genai
 pytest
+psycopg[binary]

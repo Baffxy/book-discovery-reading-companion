@@ -1,6 +1,3 @@
-from pathlib import Path
-import json
-
 import streamlit as st
 
 from src.api.open_library import OpenLibraryClient, OpenLibraryError
@@ -11,10 +8,12 @@ from src.reading.reading_guide import (
 )
 from src.reading.reading_list import ReadingListManager
 from src.recommendations.similar_books import SimilarBooksRecommender
-from src.utils.storage import (
-    StorageError,
-    load_reading_list,
-    save_reading_list,
+from src.utils.database import (
+    DatabaseError,
+    initialize_database,
+    load_reading_list_from_database,
+    save_reading_list_to_database,
+    save_reading_guide_to_database,
 )
 from src.utils.validators import is_valid_isbn, validate_title
 
@@ -34,9 +33,6 @@ st.set_page_config(
 # Constants
 # ---------------------------------------------------------
 
-STORAGE_FILE = Path("data/reading_list.json")
-READING_GUIDE_FILE = Path("data/reading_guide.json")
-
 READING_STATUSES = [
     "Want to Read",
     "Reading",
@@ -48,13 +44,23 @@ READING_STATUSES = [
 # Session state
 # ---------------------------------------------------------
 
-if "reading_list" not in st.session_state:
+# Initialize the database and load the shared reading list once per session.
+# If the database is unavailable, disable persistence rather than allowing an
+# empty fallback list to overwrite existing database records.
+if "database_ready" not in st.session_state:
     try:
-        st.session_state.reading_list = load_reading_list(
-            STORAGE_FILE
-        )
-    except StorageError:
+        initialize_database()
+        st.session_state.reading_list = load_reading_list_from_database()
+        st.session_state.database_ready = True
+        st.session_state.database_error = None
+    except DatabaseError as exc:
         st.session_state.reading_list = ReadingListManager()
+        st.session_state.database_ready = False
+        st.session_state.database_error = str(exc)
+
+if "reading_list" not in st.session_state:
+    st.session_state.reading_list = ReadingListManager()
+
 
 
 if "search_results" not in st.session_state:
@@ -77,63 +83,54 @@ if "similar_books" not in st.session_state:
 # Helper functions
 # ---------------------------------------------------------
 
-def save_current_reading_list() -> None:
-    """Save the current reading list to local JSON storage."""
+def save_current_reading_list() -> bool:
+    """Persist the shared reading list to PostgreSQL."""
+
+    if not st.session_state.get("database_ready", False):
+        st.error(
+            "The database is unavailable. Your reading-list changes "
+            "cannot be saved. Use the retry option in the sidebar."
+        )
+        return False
 
     try:
-        save_reading_list(
-            st.session_state.reading_list,
-            STORAGE_FILE,
-        )
+        save_reading_list_to_database(st.session_state.reading_list)
+        st.success("Reading list saved successfully.")
+        return True
 
-        st.success(
-            "Reading list saved successfully."
-        )
+    except DatabaseError as exc:
+        st.error(f"Could not save the reading list: {exc}")
 
-    except StorageError as exc:
-        st.error(str(exc))
+        # Restore the last persisted list when possible, so a failed save
+        # doesn't leave an unsaved list ready to overwrite database data later.
+        try:
+            st.session_state.reading_list = load_reading_list_from_database()
+        except DatabaseError:
+            st.session_state.database_ready = False
+            st.session_state.database_error = str(exc)
+
+        return False
 
 
 def save_current_reading_guide(
     book: Book,
     guide: dict,
 ) -> None:
-    """Save the generated reading guide to local JSON storage."""
+    """Persist a generated reading guide to PostgreSQL."""
 
-    guide_data = {
-        "book": {
-            "title": book.title,
-            "authors": book.authors,
-            "isbn": book.isbn,
-        },
-        "reading_guide": guide,
-    }
+    if not st.session_state.get("database_ready", False):
+        st.error(
+            "The database is unavailable. The reading guide was not saved. "
+            "Use the retry option in the sidebar."
+        )
+        return
 
     try:
-        READING_GUIDE_FILE.parent.mkdir(
-            parents=True,
-            exist_ok=True,
-        )
+        save_reading_guide_to_database(book, guide)
+        st.success("Reading guide saved successfully.")
 
-        with READING_GUIDE_FILE.open(
-            "w",
-            encoding="utf-8",
-        ) as file:
-            json.dump(
-                guide_data,
-                file,
-                indent=4,
-                ensure_ascii=False,
-            )
-
-        st.success(
-            "Reading guide saved successfully."
-        )
-
-    except OSError as exc:
-        st.error(
-            f"Failed to save reading guide: {exc}"
-        )
+    except DatabaseError as exc:
+        st.error(f"Could not save the reading guide: {exc}")
 
 
 def display_book(book: Book) -> None:
@@ -200,6 +197,24 @@ st.caption(
 
 with st.sidebar:
     st.header("📚 Reading List")
+
+    if not st.session_state.get("database_ready", False):
+        st.warning(
+            "Database unavailable. Changes cannot be saved until "
+            "the connection is restored."
+        )
+        if st.button("Retry database connection", use_container_width=True):
+            try:
+                initialize_database()
+                st.session_state.reading_list = load_reading_list_from_database()
+                st.session_state.database_ready = True
+                st.session_state.database_error = None
+                st.success("Database connection restored.")
+                st.rerun()
+            except DatabaseError as exc:
+                st.session_state.database_ready = False
+                st.session_state.database_error = str(exc)
+                st.error(f"Database connection failed: {exc}")
 
     entries = (
         st.session_state.reading_list.get_entries()
@@ -680,9 +695,8 @@ else:
                                 new_status,
                             )
 
-                            save_current_reading_list()
-
-                            st.rerun()
+                            if save_current_reading_list():
+                                st.rerun()
 
                         except (
                             ValueError,
@@ -717,9 +731,8 @@ else:
                                 book.isbn
                             )
 
-                            save_current_reading_list()
-
-                            st.rerun()
+                            if save_current_reading_list():
+                                st.rerun()
 
                         except (
                             ValueError,
