@@ -47,7 +47,6 @@ Organize books into Want to Read, Reading, and Finished categories.
 
 ![Reading List Management](screenshots/reading-list.png)
 
-
 ## ✨ Features
 
 ### 🔍 Book Discovery
