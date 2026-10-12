@@ -189,7 +189,10 @@ Streamlit will display a local URL where you can open the application in your br
 
 ## 🧪 Running Tests
 
-Run the automated test suite:
+The automated test suite covers reading-list management, input
+validation, AI reading-guide generation, and database functionality.
+
+Run the complete test suite locally with:
 
 ```bash
 python -m pytest -q
