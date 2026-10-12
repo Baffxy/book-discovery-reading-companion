@@ -20,6 +20,34 @@ Users can search for books using their title, author, or ISBN, manage a personal
 
 The application integrates the Open Library API for book discovery, Google Gemini for AI-generated reading guides, and Neon PostgreSQL for persistent data storage.
 
+
+## 📸 Application Preview
+
+### 🏠 Home Page
+
+![Book Discovery & Reading Companion Home Page](screenshots/home.png)
+
+### 🔍 Book Search
+
+![Book Search Results](screenshots/book-search.png)
+
+### 🤖 AI Reading Guide
+
+![AI Reading Guide](screenshots/ai_reading_guide.png)
+
+### 📚 Similar Book Recommendations
+
+Discover related titles based on shared authors and subjects.
+
+![Similar Books Recommendations](screenshots/similar_books.png)
+
+### 📖 Reading List Management
+
+Organize books into Want to Read, Reading, and Finished categories.
+
+![Reading List Management](screenshots/reading-list.png)
+
+
 ## ✨ Features
 
 ### 🔍 Book Discovery
