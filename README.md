@@ -218,6 +218,13 @@ The application requires configuration for the Gemini API and PostgreSQL databas
 - Deployment credentials are configured through Streamlit Community Cloud secrets.
 - Reading-list entries and saved reading guides are stored in Neon PostgreSQL.
 
+### Storage Behaviour
+
+- Reading-list changes are persisted to the configured database.
+- Saved AI reading guides can be retrieved from persistent storage.
+- Database availability and valid connection settings are required for database-backed operations.
+- Database credentials should remain in environment variables or deployment secrets rather than being committed to the repository.
+
 **Application scope:** The current application uses a shared reading list rather than separate authenticated accounts for individual users. Do not treat it as a private, multi-user reading management service.
 
 ## ⚠️ Limitations
